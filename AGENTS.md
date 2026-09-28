@@ -14,10 +14,12 @@ dependencies**. This repo is the source for that file.
 | `node --test test/scenes.test.mjs` | one test file; add `--test-name-pattern s05` for one case |
 | `npm run test:e2e` | headless Chromium: boots the page, visits every scene, fails on any shader compile or render error. First run needs `npx playwright install chromium --only-shell` |
 | `npm run check` | build + `npm test` (what CI runs before e2e) |
-| deploy | automatic: a push to `main` that passes CI publishes `dist/` to GitHub Pages (https://ayapejian.github.io/vigil/) |
 | `npm run new:scene -- <slug> ["Name"]` | scaffold `src/scenes/sNN_<slug>.js` with the next number |
 
 Node ≥ 22. The only dependency is `playwright` (dev, e2e only).
+
+Deploys are automatic: a push to `main` that passes CI publishes `dist/` to
+GitHub Pages at https://ayapejian.github.io/vigil/.
 
 ## How the output is assembled
 
