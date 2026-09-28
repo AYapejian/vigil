@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /*
  * npm run new:scene -- <slug> ["Display Name"]
- * Scaffolds src/scenes/sNN_<slug>.js with the next free number: a minimal
+ * Scaffolds src/scenes/sN_<slug>.js with the next free number: a minimal
  * fragment-shader scene (the simplest of the scene contracts; see AGENTS.md).
  */
 import { writeFileSync, existsSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { listScripts, sceneSlug } from './lib/assemble.mjs';
+import { listScripts, sceneSlug, sceneNumber } from './lib/assemble.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SRC = join(ROOT, 'src');
@@ -22,8 +22,7 @@ if (scenes.some(f => sceneSlug(f.name) === slug)) {
   console.error(`a scene with slug "${slug}" already exists`);
   process.exit(1);
 }
-const next = Math.max(0, ...scenes.map(f => Number(f.name.slice(1, 3)))) + 1;
-if (next > 99) { console.error('scene numbers are two digits; 99 is the ceiling'); process.exit(1); }
+const next = Math.max(0, ...scenes.map(f => sceneNumber(f.name))) + 1;
 const nn = String(next).padStart(2, '0');
 const name = displayName || slug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 const file = join(SRC, 'scenes', `s${nn}_${slug}.js`);
@@ -59,6 +58,3 @@ void main(){
 `);
 
 console.log(`created ${relative(ROOT, file)} (scene ${next})`);
-if (next > 20) {
-  console.log('note: digit keys only reach scenes 1–20; later scenes are reachable with ←/→, the slideshow, or ?scene=N in dev.');
-}

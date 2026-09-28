@@ -2,7 +2,7 @@
   "name": "vigil",
   "version": "0.1.0",
   "private": true,
-  "description": "Twenty quiet machines for a spare screen — a single-file WebGL2 generative screensaver.",
+  "description": "Quiet machines for a spare screen — a single-file WebGL2 generative screensaver.",
   "type": "module",
   "engines": {
     "node": ">=22"

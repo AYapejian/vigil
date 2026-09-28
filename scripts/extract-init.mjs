@@ -4,7 +4,7 @@
  *
  * The original single-file build was produced by concatenating ordered source
  * files; each one is still marked in the <script> by a `/* ===== name ===== *\/`
- * banner. This script reverses that, and the parity test proves the round trip.
+ * banner. This script reverses that; the parity test in commit a6f729b proved the round trip.
  *
  * It already ran to create src/ — it is kept so the origin of every file is
  * reproducible, not as part of the normal workflow. Refuses to overwrite src/
