@@ -1,6 +1,6 @@
 'use strict';
 /* ------------------------------------------------------------------ *
- *  VIGIL — twenty quiet machines for a spare screen
+ *  VIGIL — quiet machines for a spare screen
  *  Single-file WebGL2 generative screensaver. No dependencies.
  * ------------------------------------------------------------------ */
 

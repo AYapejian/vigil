@@ -5,12 +5,12 @@
  * not modules), so order matters and is fixed by convention:
  *
  *   engine/   NN_*.js  (NN < 40)  sorted — primitives, GL, post chain, scene API, kit
- *   scenes/   sNN_*.js            sorted — each calls scene({...}); order = scene index
+ *   scenes/   sN_*.js             by number — each calls scene({...}); order = scene index
  *   runtime/  NN_*.js  (NN >= 40) sorted — connectors, app loop, UI, boot
  *
  * Each file is emitted as `/* ===== <basename> ===== *\/\n<text>` and files are
- * joined with '\n'. This is byte-compatible with how the original was built;
- * test/parity.test.mjs holds us to that.
+ * joined with '\n'. This is byte-compatible with how the original was built
+ * (proven against _init/ in commit a6f729b).
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -18,7 +18,7 @@ import vm from 'node:vm';
 
 export const MARKER = /\/\* ===== (\S+) ===== \*\//;
 export const LAYERS = ['engine', 'scenes', 'runtime'];
-const SCENE_FILE = /^s(\d\d)_([a-z0-9-]+)\.js$/;
+const SCENE_FILE = /^s(\d+)_([a-z0-9-]+)\.js$/;
 const ORDERED_FILE = /^(\d\d)_[a-z0-9_-]+\.js$/;
 
 export const placeholder = name => `<!-- @inject:${name} -->`;
@@ -28,12 +28,15 @@ export const banner = name => `/* ===== ${name} ===== */`;
 export function layerOf(name) {
   if (SCENE_FILE.test(name)) return 'scenes';
   const m = ORDERED_FILE.exec(name);
-  if (!m) throw new Error(`unrecognised script name "${name}" (want NN_name.js or sNN_slug.js)`);
+  if (!m) throw new Error(`unrecognised script name "${name}" (want NN_name.js or sN_slug.js)`);
   return Number(m[1]) < 40 ? 'engine' : 'runtime';
 }
 
 /** Scene slug from a scene basename: s05_weather.js → weather. */
 export const sceneSlug = name => SCENE_FILE.exec(name)?.[2] ?? null;
+
+/** Scene number from a scene basename: s05_weather.js → 5. Any width; s100 sorts after s21. */
+export const sceneNumber = name => { const m = SCENE_FILE.exec(name); return m ? Number(m[1]) : null; };
 
 /** Ordered list of script files: [{ name, path, layer }]. */
 export function listScripts(srcDir) {
@@ -42,27 +45,31 @@ export function listScripts(srcDir) {
     const dir = join(srcDir, layer);
     if (!existsSync(dir)) continue;
     const names = readdirSync(dir).filter(n => n.endsWith('.js')).sort();
+    if (layer === 'scenes') names.sort((a, b) => (sceneNumber(a) ?? -1) - (sceneNumber(b) ?? -1) || (a < b ? -1 : 1));
     for (const name of names) {
       const want = layerOf(name);
       if (want !== layer) throw new Error(`${layer}/${name} belongs in ${want}/ by its name`);
       out.push({ name, path: join(dir, name), layer });
     }
   }
-  const seen = new Set();
+  const seen = new Set(), nums = new Map();
   for (const f of out) {
     if (seen.has(f.name)) throw new Error(`duplicate script name ${f.name}`);
     seen.add(f.name);
+    const n = sceneNumber(f.name);
+    if (n !== null && nums.has(n)) throw new Error(`scenes ${nums.get(n)} and ${f.name} share number ${n}`);
+    if (n !== null) nums.set(n, f.name);
   }
   return out;
 }
 
-/** Keep only the named scenes (by slug or two-digit number); engine/runtime always kept. */
+/** Keep only the named scenes (by slug or file number); engine/runtime always kept. */
 export function filterScenes(files, only) {
   if (!only || only.length === 0) return files;
   const scenes = files.filter(f => f.layer === 'scenes');
   const pick = new Set();
   for (const want of only) {
-    const hit = scenes.find(f => sceneSlug(f.name) === want || f.name.slice(1, 3) === want.padStart(2, '0'));
+    const hit = scenes.find(f => sceneSlug(f.name) === want || (/^\d+$/.test(want) && sceneNumber(f.name) === Number(want)));
     if (!hit) {
       const known = scenes.map(f => sceneSlug(f.name)).join(', ');
       throw new Error(`--only: no scene "${want}". Known: ${known}`);

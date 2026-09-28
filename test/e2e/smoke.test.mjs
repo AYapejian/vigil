@@ -45,7 +45,7 @@ test('every scene compiles and renders without errors', { timeout: 180_000 }, as
       }, [i, FRAMES_PER_SCENE]);
       const renderErrors = await page.evaluate(() => window.VIGIL.errors());
       if (errors.length || renderErrors) {
-        failures.push(`${String(i + 1).padStart(2, '0')} ${names[i]}: ${renderErrors} render error(s)\n    ${errors.join('\n    ')}`);
+        failures.push(`#${i + 1} ${names[i]}: ${renderErrors} render error(s)\n    ${errors.join('\n    ')}`);
       }
     }
     assert.equal(failures.length, 0, `scenes with errors:\n  ${failures.join('\n  ')}`);

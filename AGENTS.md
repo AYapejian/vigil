@@ -1,6 +1,6 @@
 # AGENTS.md
 
-VIGIL is a generative screensaver: twenty WebGL2 scenes, a slideshow, and a quiet
+VIGIL is a generative screensaver: a set of WebGL2 scenes, a slideshow, and a quiet
 overlay (clock, weather), shipped as **one self-contained HTML file with no runtime
 dependencies**. This repo is the source for that file.
 
@@ -9,12 +9,12 @@ dependencies**. This repo is the source for that file.
 | | |
 |---|---|
 | `npm run dev` | dev server on http://127.0.0.1:5173 with live reload. `-- --only aurora,ocean` builds a subset; `-- --host 0.0.0.0` serves on the LAN; `?scene=N` opens scene N (1-based). A reload keeps you on the scene you were viewing |
-| `npm run build` | writes `dist/index.html` (`-- --only <slug|NN,...>`, `-- --out <path>`) |
-| `npm test` | Node unit + contract + parity tests (`node:test`, no browser) |
+| `npm run build` | writes `dist/index.html` (`-- --only <slug|number,...>`, `-- --out <path>`) |
+| `npm test` | Node unit + contract tests (`node:test`, no browser) |
 | `node --test test/scenes.test.mjs` | one test file; add `--test-name-pattern s05` for one case |
 | `npm run test:e2e` | headless Chromium: boots the page, visits every scene, fails on any shader compile or render error. First run needs `npx playwright install chromium --only-shell` |
 | `npm run check` | build + `npm test` (what CI runs before e2e) |
-| `npm run new:scene -- <slug> ["Name"]` | scaffold `src/scenes/sNN_<slug>.js` with the next number |
+| `npm run new:scene -- <slug> ["Name"]` | scaffold `src/scenes/sN_<slug>.js` with the next number |
 
 Node ≥ 22. The only dependency is `playwright` (dev, e2e only).
 
@@ -33,8 +33,10 @@ declared by a file before it. Order comes from where a file lives and its
 number prefix:
 
 1. `src/engine/NN_*.js` (NN < 40): primitives, GL wrappers, post chain, scene registry, kit
-2. `src/scenes/sNN_<slug>.js`: each calls `scene({...})`. **The file number is the
-   scene's index** (slideshow order, digit keys, `?scene=N`)
+2. `src/scenes/sN_<slug>.js`: each calls `scene({...})`. Files sort **by number
+   value** at any width (`s3` < `s21` < `s100`). Gaps are fine, but two files
+   with the same number fail the build. The sorted position is the scene's
+   index: slideshow order, the number you type, and `?scene=N`
 3. `src/runtime/NN_*.js` (NN ≥ 40): data connectors, app loop, UI, then `boot()`
 
 The build syntax-checks every file on its own, then the joined bundle. That
@@ -44,7 +46,8 @@ private state in an IIFE (`(function () { ... scene({...}); })();`).
 
 Line 1 of `src/shell/index.html` (the `<head>` with `color-scheme:light` and a
 cream body background) is the claude.ai artifact-publish wrapper the original was
-exported with. The app's own CSS overrides it. It is kept only for byte parity.
+exported with. The app's own CSS overrides it. It is a leftover from the
+original and can be dropped in a change of its own.
 
 ## Runtime architecture
 
@@ -120,10 +123,9 @@ e2e test are built on it, so keep it stable.
 
 ## Tests, and what each layer can and cannot see
 
-- `test/parity.test.mjs`: **the refactor gate.** The build must equal
-  `_init/vigil-original-start.html` byte for byte. It proves the split into
-  `src/` lost nothing. **The first commit that intentionally changes the output
-  (a new scene, any source edit) deletes this test.** Keep `_init/` as provenance.
+- Parity with `_init/vigil-original-start.html` was proven by the first commit
+  (`a6f729b`). That test was retired once the output started changing on
+  purpose. `_init/` stays as provenance.
 - `test/scenes.test.mjs`: loads each scene file alone (the engine plus that one
   file) in a DOM-less `vm` sandbox (`test/helpers/sandbox.mjs`) and checks the
   contract above. It also evaluates the whole bundle once.
@@ -141,11 +143,13 @@ bindings with `pick('name', ...)`. Arrays made inside the vm have a different
 
 ## Known limits (deliberate, for now)
 
-- Digit keys reach scenes 1–20 only. The help text and boot line ("twenty quiet
-  machines") are hard-coded in `src/shell/index.html`.
+- **Nothing assumes a scene count.** Don't reintroduce one in copy, markup,
+  keys or tooling: use `SCENES.length` at runtime, and in prose just say
+  "scenes". Number entry is in `runtime/60_ui.js` (`pickDigit`), and the counter
+  pads to the count's width.
 - No linter or formatter yet. The global-scope script style needs a declared
   globals list (or a move to ES modules plus a bundler) before `no-undef` is
-  useful. Running a formatter would also rewrite every line of the parity-locked
-  source.
+  useful. A formatter pass should be its own commit, so real changes stay
+  reviewable.
 - `scripts/extract-init.mjs` is the one-time script that created `src/` from
   `_init/`. It is not part of the workflow, and it refuses to overwrite `src/`.

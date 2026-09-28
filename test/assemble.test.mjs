@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { assemble, layerOf, sceneSlug, listScripts, filterScenes, banner } from '../scripts/lib/assemble.mjs';
+import { assemble, layerOf, sceneSlug, sceneNumber, listScripts, filterScenes, banner } from '../scripts/lib/assemble.mjs';
 import { SRC } from './helpers/sandbox.mjs';
 
 /* Minimal src/ tree in a temp dir. files: { 'engine/00_a.js': 'text', ... } */
@@ -25,9 +25,12 @@ describe('naming', () => {
     assert.equal(layerOf('s07_ocean.js'), 'scenes');
     assert.throws(() => layerOf('util.js'), /unrecognised/);
   });
-  test('sceneSlug', () => {
+  test('sceneSlug / sceneNumber', () => {
     assert.equal(sceneSlug('s05_weather.js'), 'weather');
     assert.equal(sceneSlug('50_app.js'), null);
+    assert.equal(sceneNumber('s05_weather.js'), 5);
+    assert.equal(sceneNumber('s120_late.js'), 120);
+    assert.equal(sceneNumber('50_app.js'), null);
   });
 });
 
@@ -38,8 +41,18 @@ describe('ordering', () => {
     assert.deepEqual([...new Set(layers)], ['engine', 'scenes', 'runtime']);
     assert.ok(layers.lastIndexOf('engine') < layers.indexOf('scenes'));
     assert.ok(layers.lastIndexOf('scenes') < layers.indexOf('runtime'));
-    const nums = files.filter(f => f.layer === 'scenes').map(f => Number(f.name.slice(1, 3)));
+    const nums = files.filter(f => f.layer === 'scenes').map(f => sceneNumber(f.name));
     assert.deepEqual(nums, [...nums].sort((a, b) => a - b));
+  });
+
+  test('scene numbers sort by value, not text, at any width', () => {
+    const fx = fixture({ 'scenes/s100_c.js': '1;\n', 'scenes/s21_b.js': '1;\n', 'scenes/s3_a.js': '1;\n' });
+    try { assert.deepEqual(listScripts(fx.dir).map(f => f.name), ['s3_a.js', 's21_b.js', 's100_c.js']); } finally { fx.done(); }
+  });
+
+  test('two scenes with the same number are rejected', () => {
+    const fx = fixture({ 'scenes/s1_a.js': '1;\n', 'scenes/s01_b.js': '1;\n' });
+    try { assert.throws(() => listScripts(fx.dir), /share number 1/); } finally { fx.done(); }
   });
 
   test('a file in the wrong layer directory is rejected', () => {
@@ -51,7 +64,7 @@ describe('ordering', () => {
 describe('--only', () => {
   const files = listScripts(SRC);
   test('by slug and by number, engine/runtime always kept', () => {
-    const out = filterScenes(files, ['weather', '1']);
+    const out = filterScenes(files, ['weather', '01']);
     assert.deepEqual(out.filter(f => f.layer === 'scenes').map(f => f.name), ['s01_tungsten.js', 's05_weather.js']);
     assert.equal(out.filter(f => f.layer !== 'scenes').length, files.filter(f => f.layer !== 'scenes').length);
   });

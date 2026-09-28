@@ -5,7 +5,8 @@ const UI = {
   el: {}, idle: 0, visible: false, forced: 0,
   toastT: 0, glyphT: 0, helpOpen: false, hidden: false,
   lastMouse: [0, 0], booted: false, bootT: 0,
-  touchX: 0, touchY: 0, touchT: 0
+  touchX: 0, touchY: 0, touchT: 0,
+  pick: '', pickT: 0
 };
 
 function initUI() {
@@ -104,7 +105,8 @@ function hideChrome() {
 function updateChrome(i) {
   if (!UI.el.title) return;
   const s = SCENES[i];
-  UI.el.idx.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(SCENES.length).padStart(2, '0');
+  const w = Math.max(2, String(SCENES.length).length);
+  UI.el.idx.textContent = String(i + 1).padStart(w, '0') + ' / ' + String(SCENES.length).padStart(w, '0');
   UI.el.title.textContent = s.name;
   UI.el.medium.textContent = s.medium;
   document.documentElement.style.setProperty('--chrome', s.chrome || '#e8e4dc');
@@ -189,6 +191,7 @@ function tickUI(dt) {
   }
   if (UI.toastT > 0) { UI.toastT -= dt; if (UI.toastT <= 0) UI.el.toast.classList.remove('show'); }
   if (UI.glyphT > 0) { UI.glyphT -= dt; if (UI.glyphT <= 0) UI.el.glyph.classList.remove('flash'); }
+  if (UI.pickT > 0) { UI.pickT -= dt; if (UI.pickT <= 0) commitPick(); }
 
   const s = SCENES[App.cur];
   const k = App.slideshow ? clamp(1 - App.dwellLeft / s.dwell, 0, 1) : 0;
@@ -264,19 +267,38 @@ function onKey(e) {
       UI.el.help.classList.toggle('show', UI.helpOpen);
       if (UI.helpOpen) reveal(9999); else reveal(2.6);
       break;
+    case 'Enter':
+      if (UI.pick) commitPick(); else handled = false;
+      break;
     default: {
-      /* digits 1..0 → scenes 1–10; with shift (US layout symbols or e.code) → 11–20 */
-      let digit = -1;
-      if (k >= '0' && k <= '9') digit = parseInt(k, 10);
-      else if (e.code && /^Digit\d$/.test(e.code) && e.shiftKey) digit = parseInt(e.code.slice(5), 10);
-      if (digit >= 0) {
-        const base = (digit === 0 ? 9 : digit - 1);
-        const i = base + (e.shiftKey ? 10 : 0);
-        if (i < SCENES.length) jump(i);
-      } else handled = false;
+      /* digits type a 1-based scene number; e.code covers layouts where digits need shift */
+      let digit = null;
+      if (k >= '0' && k <= '9') digit = k;
+      else if (e.code && /^(Digit|Numpad)\d$/.test(e.code)) digit = e.code.slice(-1);
+      if (digit !== null) pickDigit(digit);
+      else handled = false;
     }
   }
   if (handled) { e.preventDefault(); reveal(UI.helpOpen ? 9999 : 3.2); }
+}
+
+/* Scene-number entry: digits accumulate and jump once no longer number exists,
+   after a short pause, or on Enter — works for any number of scenes. */
+const PICK_WAIT = 0.9;
+function pickDigit(d) {
+  UI.pick = (UI.pick + d).slice(-6);
+  const n = parseInt(UI.pick, 10);
+  UI.el.glyph.textContent = UI.pick;
+  UI.el.glyph.classList.add('flash');
+  UI.glyphT = PICK_WAIT + 0.3;
+  if (n * 10 > SCENES.length) commitPick();
+  else UI.pickT = PICK_WAIT;
+}
+function commitPick() {
+  const n = parseInt(UI.pick, 10);
+  UI.pick = ''; UI.pickT = 0;
+  if (n >= 1 && n <= SCENES.length) jump(n - 1);
+  else toast('no scene ' + n + ' · 1–' + SCENES.length);
 }
 
 function dwellAdjust(d) {
