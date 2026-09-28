@@ -1,0 +1,56 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>VIGIL</title>
+<!-- @inject:styles -->
+<canvas id="c"></canvas>
+
+<div id="boot"><div id="bootInner"><div id="bootTitle">VIGIL</div><div id="bootSub">twenty quiet machines for a spare screen</div><div id="bootHint">click for fullscreen &nbsp;·&nbsp; <b>?</b> for keys</div></div></div>
+
+<div id="chrome" aria-hidden="true">
+  <div id="label">
+    <div id="idx">01 / 20</div>
+    <div id="title">TUNGSTEN HOUR</div>
+    <div id="medium">VOLUMETRIC · SINGLE PASS · 2700 K</div>
+  </div>
+  <div id="clock">--:--</div>
+  <div id="dots"></div>
+  <div id="glyph"></div>
+</div>
+<div id="bar"><div id="barFill"></div></div>
+
+<div id="help">
+  <div class="hrow"><b>&larr; &rarr;</b><span>or <b>A</b> / <b>D</b> — previous / next scene</span></div>
+  <div class="hrow"><b>space</b><span>or <b>S</b> — start / pause slideshow</span></div>
+  <div class="hrow"><b>&uarr; &darr;</b><span>slideshow dwell &plusmn;30s</span></div>
+  <div class="hrow"><b>1 … 0</b><span>jump to scene 1–10 &nbsp;·&nbsp; <b>shift</b>+digit → 11–20</span></div>
+  <div class="hrow"><b>C</b><span>cycle colour theme</span></div>
+  <div class="hrow"><b>I</b><span>info display <i id="hInfo">auto</i></span></div>
+  <div class="hrow"><b>[ ]</b><span>animation speed <i id="hSpeed">1.0×</i></span></div>
+  <div class="hrow"><b>, .</b><span>scene density <i id="hDens">1.0×</i></span></div>
+  <div class="hrow"><b>F</b><span>fullscreen</span></div>
+  <div class="hrow"><b>R</b><span>reseed this scene</span></div>
+  <div class="hrow"><b>N</b><span>night dim <i id="hNight">auto</i></span></div>
+  <div class="hrow"><b>Q</b><span>render scale <i id="hQual">auto</i></span></div>
+  <div class="hrow"><b>H</b><span>hide all chrome</span></div>
+  <div class="hrow"><b>?</b><span>this list &nbsp;·&nbsp; touch: swipe to change scene</span></div>
+  <div class="hfoot">VIGIL · build 2026-09-12 · webgl2 · weather via open-meteo when permitted</div>
+</div>
+
+<div id="info"><div id="iClock">--:--</div><div id="iDate"></div><div id="iWx"></div></div>
+
+<div id="tbar">
+  <button data-act="prev" aria-label="previous">&#8249;</button>
+  <button data-act="play" aria-label="play/pause">&#10073;&#10073;</button>
+  <button data-act="next" aria-label="next">&#8250;</button>
+  <span class="tsep"></span>
+  <button data-act="theme" aria-label="colour theme">&#9681;</button>
+  <button data-act="info" aria-label="info display">i</button>
+  <button data-act="fs" aria-label="fullscreen">&#8862;</button>
+</div>
+
+<div id="nstack"></div>
+<div id="toast"></div>
+<div id="fail"></div>
+
+<!-- @inject:scripts -->
+
+</body></html>

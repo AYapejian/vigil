@@ -1,0 +1,21 @@
+{
+  "name": "vigil",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Twenty quiet machines for a spare screen — a single-file WebGL2 generative screensaver.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:e2e": "node --test test/e2e/*.test.mjs",
+    "new:scene": "node scripts/new-scene.mjs",
+    "check": "npm run build && npm test"
+  },
+  "devDependencies": {
+    "playwright": "^1.63.0"
+  }
+}
