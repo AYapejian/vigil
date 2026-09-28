@@ -10,6 +10,8 @@ Chromium browser with hardware acceleration and click for fullscreen.
 
 ## Use
 
+**Live:** https://ayapejian.github.io/vigil/, deployed from `main` after CI passes.
+
 ```sh
 npm install
 npm run build        # → dist/index.html, the whole app in one file
