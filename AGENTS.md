@@ -18,6 +18,9 @@ dependencies**. This repo is the source for that file.
 
 Node ≥ 22. The only dependency is `playwright` (dev, e2e only).
 
+Deploys are automatic: a push to `main` that passes CI publishes `dist/` to
+GitHub Pages at https://ayapejian.github.io/vigil/.
+
 ## How the output is assembled
 
 `scripts/lib/assemble.mjs` is the whole build. It reads `src/shell/index.html` and
